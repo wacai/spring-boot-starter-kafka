@@ -2,8 +2,12 @@ package com.wacai.springboot.kafka.autocfg;
 
 import com.wacai.springboot.kafka.component.MetadataPreloader;
 import com.wacai.springboot.kafka.component.RandomTopics;
+import com.wacai.springboot.kafka.component.RecoverableProducer;
+import com.wacai.springboot.kafka.component.Recovery;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -19,9 +23,27 @@ import java.util.Properties;
 public class KafkaConfiguration {
 
     @Bean
-    KafkaProducer<String, String> producer(@Value("${springboot.kafka.config:./kafka.properties}") String props)
+    Producer<String, String> producer(@Value("${springboot.kafka.config:./kafka.properties}") String props)
             throws IOException {
         return new KafkaProducer<>(config(new File(props)), new StringSerializer(), new StringSerializer());
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "springboot.kafka.recovery")
+    Recovery recovery(
+            @Qualifier("producer") Producer<String, String> producer,
+            @Value("${springboot.kafka.recovery.dir}") String dir
+    ) {
+        return new Recovery(new File(dir), producer);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "springboot.kafka.recovery")
+    Producer<String, String> recoverableProducer(
+            @Qualifier("producer") Producer<String, String> producer,
+            @Value("${springboot.kafka.recovery.dir}") String dir,
+            @Value("${springboot.kafka.recovery.backlog:128}") int backlog) {
+        return new RecoverableProducer(producer, new File(dir), backlog);
     }
 
     @Bean
@@ -37,7 +59,7 @@ public class KafkaConfiguration {
     MetadataPreloader metadataPreloader(
             @Value("${springboot.kafka.metadata.timeout:500}") long timeoutMillis,
             @Value("${springboot.kafka.metadata.ignore:ignore}") String ignoreMessage,
-            KafkaProducer<String, String> producer) {
+            @Qualifier("producer") Producer<String, String> producer) {
         return new MetadataPreloader(timeoutMillis, ignoreMessage, producer);
     }
 
