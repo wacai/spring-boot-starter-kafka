@@ -14,22 +14,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.util.Map;
 
 @Configuration
 public class KafkaConfiguration {
 
     @Bean
-    Producer<String, String> producer(@Value("${springboot.kafka.config:./kafka.properties}") String props)
+    Producer<String, String> producer(@Qualifier("kafkaConfig") Map<String, Object> props)
             throws IOException {
-        return new KafkaProducer<>(config(new File(props)), new StringSerializer(), new StringSerializer());
+        return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "springboot.kafka.recovery")
+    @ConditionalOnProperty("springboot.kafka.recovery")
     Recovery recovery(
             @Qualifier("producer") Producer<String, String> producer,
             @Value("${springboot.kafka.recovery.dir}") String dir
@@ -38,7 +36,7 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "springboot.kafka.recovery")
+    @ConditionalOnProperty("springboot.kafka.recovery")
     Producer<String, String> recoverableProducer(
             @Qualifier("producer") Producer<String, String> producer,
             @Value("${springboot.kafka.recovery.dir}") String dir,
@@ -47,7 +45,7 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "springboot.kafka.topic")
+    @ConditionalOnProperty("springboot.kafka.topic")
     RandomTopics randomTopics(
             @Value("${springboot.kafka.topic.prefix}") String prefix,
             @Value("${springboot.kafka.topic.parallel}") int parallel
@@ -61,15 +59,6 @@ public class KafkaConfiguration {
             @Value("${springboot.kafka.metadata.ignore:ignore}") String ignoreMessage,
             @Qualifier("producer") Producer<String, String> producer) {
         return new MetadataPreloader(timeoutMillis, ignoreMessage, producer);
-    }
-
-
-    private Properties config(File file) throws IOException {
-        Properties props = new Properties();
-        try (InputStream in = new FileInputStream(file)) {
-            props.load(in);
-        }
-        return props;
     }
 
 }
