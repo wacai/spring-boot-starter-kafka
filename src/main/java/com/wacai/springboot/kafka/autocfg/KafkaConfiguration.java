@@ -10,24 +10,26 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 @Configuration
+@EnableConfigurationProperties(Kafka.class)
 public class KafkaConfiguration {
 
+
     @Bean
-    Producer<String, String> producer(@Qualifier("kafkaConfig") Map<String, Object> props)
+    Producer<String, String> producer(Kafka kafka)
             throws IOException {
-        return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
+        return new KafkaProducer<>(kafka.getProps(), new StringSerializer(), new StringSerializer());
     }
 
     @Bean
-    @ConditionalOnProperty("springboot.kafka.recovery")
+    @ConditionalOnProperty("springboot.kafka.recovery.dir")
     Recovery recovery(
             @Qualifier("producer") Producer<String, String> producer,
             @Value("${springboot.kafka.recovery.dir}") String dir
@@ -36,7 +38,7 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty("springboot.kafka.recovery")
+    @ConditionalOnProperty("springboot.kafka.recovery.dir")
     Producer<String, String> recoverableProducer(
             @Qualifier("producer") Producer<String, String> producer,
             @Value("${springboot.kafka.recovery.dir}") String dir,
@@ -45,7 +47,7 @@ public class KafkaConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty("springboot.kafka.topic")
+    @ConditionalOnProperty(prefix = "springboot.kafka.topic", name = {"prefix", "parallel"})
     RandomTopics randomTopics(
             @Value("${springboot.kafka.topic.prefix}") String prefix,
             @Value("${springboot.kafka.topic.parallel}") int parallel
