@@ -43,7 +43,9 @@ public class KafkaConfiguration {
             @Qualifier("producer") Producer<String, String> producer,
             @Value("${springboot.kafka.recovery.dir}") String dir,
             @Value("${springboot.kafka.recovery.backlog:128}") int backlog) {
-        return new RecoverableProducer(producer, new File(dir), backlog);
+        final File directory = new File(dir);
+        if (!directory.exists()) directory.mkdirs();
+        return new RecoverableProducer(producer, directory, backlog);
     }
 
     @Bean
