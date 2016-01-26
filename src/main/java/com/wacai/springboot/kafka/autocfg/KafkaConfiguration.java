@@ -22,12 +22,20 @@ import java.io.IOException;
 public class KafkaConfiguration {
 
 
+    /**
+     * 底层的 {@link Producer} 实例, 仅仅是纯粹的发消息.
+     */
     @Bean
     Producer<String, String> producer(Kafka kafka)
             throws IOException {
         return new KafkaProducer<>(kafka.getProps(), new StringSerializer(), new StringSerializer());
     }
 
+    /**
+     * 用于重新发送之前 {@link KafkaConfiguration#recoverableProducer(Producer, String, int)} 发送失败且存储在本地的消息
+     *
+     * @see KafkaConfiguration#producer(Kafka)
+     */
     @Bean
     @ConditionalOnProperty("springboot.kafka.recovery.dir")
     Recovery recovery(
@@ -37,6 +45,13 @@ public class KafkaConfiguration {
         return new Recovery(new File(dir), producer);
     }
 
+    /**
+     * 消息是有可能因为网络等原因而发送失败的, 此 {@link Producer} 实例会将发送失败的消息暂存到本地目录中.
+     * <p/>
+     * 待需要重发时, 可以使用{@link KafkaConfiguration#recovery(Producer, String)}来回复.
+     *
+     * @see KafkaConfiguration#producer(Kafka)
+     */
     @Bean
     @ConditionalOnProperty("springboot.kafka.recovery.dir")
     Producer<String, String> recoverableProducer(
@@ -48,6 +63,9 @@ public class KafkaConfiguration {
         return new RecoverableProducer(producer, directory, backlog);
     }
 
+    /**
+     * @see RandomTopics
+     */
     @Bean
     @ConditionalOnProperty(prefix = "springboot.kafka.topic", name = {"prefix", "parallel"})
     RandomTopics randomTopics(
@@ -57,6 +75,9 @@ public class KafkaConfiguration {
         return new RandomTopics(prefix, parallel);
     }
 
+    /**
+     * @see MetadataPreloader
+     */
     @Bean
     MetadataPreloader metadataPreloader(
             @Value("${springboot.kafka.metadata.timeout:500}") long timeoutMillis,
