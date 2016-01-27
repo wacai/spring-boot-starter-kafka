@@ -1,9 +1,6 @@
 package com.wacai.springboot.kafka.autocfg;
 
-import com.wacai.springboot.kafka.component.MetadataPreloader;
-import com.wacai.springboot.kafka.component.RandomTopics;
-import com.wacai.springboot.kafka.component.RecoverableProducer;
-import com.wacai.springboot.kafka.component.Recovery;
+import com.wacai.springboot.kafka.component.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -73,6 +70,18 @@ public class KafkaConfiguration {
             @Value("${springboot.kafka.topic.parallel}") int parallel
     ) {
         return new RandomTopics(prefix, parallel);
+    }
+
+    /**
+     * @see ModTopics
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "springboot.kafka.topic", name = {"prefix", "parallel"})
+    ModTopics modTopics(
+            @Value("${springboot.kafka.topic.prefix}") String prefix,
+            @Value("${springboot.kafka.topic.parallel}") int parallel
+    ) {
+        return new ModTopics(prefix, parallel);
     }
 
     /**
