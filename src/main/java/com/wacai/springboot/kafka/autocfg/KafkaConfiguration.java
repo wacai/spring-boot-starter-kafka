@@ -4,7 +4,6 @@ import com.wacai.springboot.kafka.component.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,35 +28,33 @@ public class KafkaConfiguration {
     }
 
     /**
-     * 用于重新发送之前 {@link KafkaConfiguration#recoverableProducer(Producer, String, int)} 发送失败且存储在本地的消息
+     * 用于重新发送之前 {@link KafkaConfiguration#recoverableProducer(Kafka, String, int)} 发送失败且存储在本地的消息
      *
      * @see KafkaConfiguration#producer(Kafka)
      */
     @Bean
     @ConditionalOnProperty("springboot.kafka.recovery.dir")
-    Recovery recovery(
-            @Qualifier("producer") Producer<String, String> producer,
-            @Value("${springboot.kafka.recovery.dir}") String dir
-    ) {
-        return new Recovery(new File(dir), producer);
+    Recovery recovery(Kafka kafka, @Value("${springboot.kafka.recovery.dir}") String dir) throws IOException {
+        return new Recovery(new File(dir), producer(kafka));
     }
 
     /**
      * 消息是有可能因为网络等原因而发送失败的, 此 {@link Producer} 实例会将发送失败的消息暂存到本地目录中.
      * <p/>
-     * 待需要重发时, 可以使用{@link KafkaConfiguration#recovery(Producer, String)}来回复.
+     * 待需要重发时, 可以使用{@link KafkaConfiguration#recovery(Kafka, String)}来回复.
      *
      * @see KafkaConfiguration#producer(Kafka)
      */
     @Bean
     @ConditionalOnProperty("springboot.kafka.recovery.dir")
     Producer<String, String> recoverableProducer(
-            @Qualifier("producer") Producer<String, String> producer,
+            Kafka kafka,
             @Value("${springboot.kafka.recovery.dir}") String dir,
-            @Value("${springboot.kafka.recovery.backlog:128}") int backlog) {
+            @Value("${springboot.kafka.recovery.backlog:128}") int backlog
+    ) throws IOException {
         final File directory = new File(dir);
         if (!directory.exists()) directory.mkdirs();
-        return new RecoverableProducer(producer, directory, backlog);
+        return new RecoverableProducer(producer(kafka), directory, backlog);
     }
 
     /**
@@ -91,8 +88,8 @@ public class KafkaConfiguration {
     MetadataPreloader metadataPreloader(
             @Value("${springboot.kafka.metadata.timeout:500}") long timeoutMillis,
             @Value("${springboot.kafka.metadata.ignore:ignore}") String ignoreMessage,
-            @Qualifier("producer") Producer<String, String> producer) {
-        return new MetadataPreloader(timeoutMillis, ignoreMessage, producer);
+            Kafka kafka) throws IOException {
+        return new MetadataPreloader(timeoutMillis, ignoreMessage, producer(kafka));
     }
 
 }
