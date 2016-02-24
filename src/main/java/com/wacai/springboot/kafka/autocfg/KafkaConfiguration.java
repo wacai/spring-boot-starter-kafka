@@ -22,8 +22,7 @@ public class KafkaConfiguration {
      * 底层的 {@link Producer} 实例, 仅仅是纯粹的发消息.
      */
     @Bean
-    Producer<String, String> producer(Kafka kafka)
-            throws IOException {
+    Producer<String, String> producer(Kafka kafka) throws IOException {
         return new KafkaProducer<>(kafka.getProps(), new StringSerializer(), new StringSerializer());
     }
 
@@ -41,7 +40,7 @@ public class KafkaConfiguration {
     /**
      * 消息是有可能因为网络等原因而发送失败的, 此 {@link Producer} 实例会将发送失败的消息暂存到本地目录中.
      * <p/>
-     * 待需要重发时, 可以使用{@link KafkaConfiguration#recovery(Kafka, String)}来回复.
+     * 待需要重发时, 可以使用{@link KafkaConfiguration#recovery(Kafka, String)}来恢复.
      *
      * @see KafkaConfiguration#producer(Kafka)
      */
