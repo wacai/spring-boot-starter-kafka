@@ -22,4 +22,4 @@ springboot.kafka.conf.props[bootstrap.servers]=10.0.0.1:9092,10.0.0.2:9092
 
 > `springboot.kafka.conf.props[bootstrap.servers]`的写法请参见[Spring-Boot-Configuration-Binding](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-Configuration-Binding)
 
-其余的配置参见 [KafkaConfiguration](.src/main/java/com/wacai/springboot/kafka/autocfg/KafkaConfiguration.java) 
+其余的配置参见 [KafkaConfiguration](./src/main/java/com/wacai/springboot/kafka/autocfg/KafkaConfiguration.java)
