@@ -15,6 +15,7 @@ import java.io.IOException;
 
 @Configuration
 @EnableConfigurationProperties(Kafka.class)
+@ConditionalOnProperty("springboot.kafka.conf.props")
 public class KafkaConfiguration {
 
 
