@@ -1,5 +1,9 @@
 ## 依赖
 
+```
+mvn clean install
+```
+
 ```xml
 <dependency>
     <groupId>com.wacai</groupId>
@@ -8,8 +12,6 @@
 </dependency>
 
 ```
-
-> 最新版请见[nexus](http://repo.caimi-inc.com/nexus/#nexus-search;quick~spring-boot-starter-kafka)
 
 
 ## Kafka Producer Properties
